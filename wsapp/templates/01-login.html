@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}ログイン - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>ログイン</h1>
+    
+    <form action="{% url 'wsapp:01-login' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="emp_id">従業員ID</label>
+            <input type="text" id="emp_id" name="emp_id" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">パスワード</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
+            <button type="submit" class="btn" style="font-size: 16px;">ログイン</button>
+            <p style="font-size: 13px; color: #666; margin: 0;">パスワードをお忘れの方は、システム管理者までお問い合わせ下さい。</p>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}トップ - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>トップ</h1>
+    
+    <div style="background:#e8f4f8; padding:15px; border-radius:4px; margin-bottom:20px;">
+        <h2>本日の状況</h2>
+        <p><strong>コンディション:</strong> 良好</p>
+        <p><strong>タスク:</strong></p>
+        <ul>
+            {% for task in my_tasks %}
+                <li>
+                    {% if task.pk %}
+                        <a href="{% url 'wsapp:19-task-check' task.pk %}">{{ task.task_name }}</a>
+                    {% else %}
+                        {{ task.task_name }}
+                    {% endif %}
+                    {% if task.deadline %}
+                        (期限: {{ task.deadline|date:"Y-m-d H:i" }})
+                    {% else %}
+                        (期限: 本日)
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li>現在登録されているタスクはありません。</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <h2>従業員メニュー</h2>
+    <ul>
+        <li><a href="{% url 'wsapp:04-attendance' %}">出勤打刻登録</a></li>
+        <li><a href="{% url 'wsapp:05-leaving-work' %}">退勤打刻登録</a></li>
+        <li><a href="{% url 'wsapp:06-condition-create' %}">コンディション登録</a></li>
+        <li><a href="{% url 'wsapp:09-working-history' %}">勤務履歴</a></li>
+        {% if task.pk %}
+            <a href="{% url 'wsapp:19-task-check' task.pk %}">{{ task.task_name }}</a>
+        {% else %}
+            {{ task.task_name }}
+        {% endif %}
+        <li><a href="{% url 'wsapp:20-password-update' %}">パスワード変更</a></li>
+    </ul>
+
+    {% if request.user.authority %}
+        <h2>管理者メニュー</h2>
+        <ul>
+            <li><a href="{% url 'wsapp:10-employee-create' %}">従業員登録</a></li>
+            <li><a href="{% url 'wsapp:12-employee-list' %}">従業員一覧</a></li>
+            <li><a href="{% url 'wsapp:13-condition-list' %}">コンディション一覧</a></li>
+            <li><a href="{% url 'wsapp:14-task-create' %}">タスク登録</a></li>
+            <li><a href="{% url 'wsapp:16-task-list' %}">タスク一覧</a></li>
+            <li><a href="{% url 'wsapp:17-clock-in-list' %}">打刻時間一覧</a></li>
+        </ul>
+    {% endif %}
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:02-logout' %}" class="btn">ログアウト</a>
+    </div>
+{% endblock %}

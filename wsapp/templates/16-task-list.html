@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}タスク一覧 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>タスク一覧</h1>
+    <div style="margin-bottom: 15px;">
+        <a href="{% url 'wsapp:14-task-create' %}" class="btn">+ 新規タスク登録</a>
+    </div>
+
+    <div class="filter-area">
+        <label for="filter-select">絞り込み:</label>
+        <select id="filter-select">
+            <option value="all">すべて表示</option>
+            <option value="bad-condition">コンディションが悪い人</option>
+            <option value="high-workload">業務負荷が大きい人</option>
+        </select>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 220px; font-weight: bold;">タスク名</th>
+                <th style="width: 100px;">担当者</th>
+                <th style="width: 80px;">ステータス</th>
+                <th style="width: 110px;">コンディション</th>
+                <th style="width: 110px;">期限</th>
+                <th>詳細</th>
+                <th style="width: 100px; text-align: center;">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="width: 220px; font-weight: bold;">資料作成</td>
+                <td>大原太郎</td>
+                <td>未処理</td>
+                <td style="color: green; font-weight: bold;">良好</td>
+                <td>2026/10/10</td>
+                <td style="width: 180px; font-size: 14px; color: #555;">来期の事業計画に向けたパワーポイント資料の作成。</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 5px; align-items: center; justify-content: center;">
+                        <a href="#" class="btn-sm" style="color: #e74c3c; border-color: #e74c3c;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e74c3c';">完了</a>
+                        <a href="{% url 'wsapp:15-task-update' %}" class="btn-sm">編集</a>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 220px; font-weight: bold;">顧客対応</td>
+                <td>山田太郎</td>
+                <td>処理中</td>
+                <td style="color: #856404; font-weight: bold;">要休息</td>
+                <td>2026/10/09</td>
+                <td style="width: 180px; font-size: 14px; color: #555;">A社からの問い合わせメールへの返信および一次対応。</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 5px; align-items: center; justify-content: center;">
+                        <a href="#" class="btn-sm" style="color: #e74c3c; border-color: #e74c3c;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e74c3c';">完了</a>
+                        <a href="{% url 'wsapp:15-task-update' %}" class="btn-sm">編集</a>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}

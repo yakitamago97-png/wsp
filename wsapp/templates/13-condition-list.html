@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}コンディション一覧 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>コンディション一覧</h1>
+
+    <div class="filter-area">
+        <div>
+            <label for="target_date">対象日:</label>
+            <input type="date" id="target_date" value="2026-10-09">
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>従業員名</th>
+                <th style="width: 120px;">対象日</th>
+                <th style="width: 100px;">睡眠時間</th>
+                <th style="width: 90px;">体調</th>
+                <th>気分</th>
+                <th style="width: 100px;">AI判定</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>大原 太郎</td>
+                <td>2026/10/09</td>
+                <td>7.5時間</td>
+                <td>普通</td>
+                <td>スッキリしている</td>
+                <td style="color: green; font-weight: bold;">良好</td>
+            </tr>
+            <tr>
+                <td>山田 太郎</td>
+                <td>2026/10/09</td>
+                <td>4.0時間</td>
+                <td>悪い</td>
+                <td>イライラしている</td>
+                <td style="color: #856404; font-weight: bold;">要休息</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}

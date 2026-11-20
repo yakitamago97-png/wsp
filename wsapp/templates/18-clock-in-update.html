@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}打刻時間編集 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>打刻時間編集</h1>
+    
+    <form action="#" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="emp_name">従業員名</label>
+            <input type="text" id="emp_name" name="emp_name" value="大原 太郎" readonly style="background-color: #e9ecef;">
+        </div>
+
+        <div class="form-group">
+            <label for="work_date">対象日</label>
+            <input type="date" id="work_date" name="work_date" value="2026-10-19" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="clock_in">出勤時間</label>
+                <input type="time" id="clock_in" name="clock_in" value="09:00" required>
+            </div>
+            <div class="form-group">
+                <label for="clock_out">退勤時間</label>
+                <input type="time" id="clock_out" name="clock_out" value="18:00">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="reason">変更理由（管理者メモ）</label>
+            <textarea id="reason" name="reason" placeholder="直行直帰のため、打刻忘れ修正のため、など理由を入力してください" style="resize: vertical; height: 80px; font-family: sans-serif;">打刻漏れの修正申請に基づく変更</textarea>
+        </div>
+
+        <button type="submit" class="btn">打刻時間を変更する</button>
+    </form>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}
