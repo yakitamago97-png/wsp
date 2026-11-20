@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}退勤打刻登録 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>退勤打刻登録</h1>
+    <p style="font-size: 24px; text-align: center; font-weight: bold; margin: 30px 0;">18:00:00</p>
+    
+    <form action="#" method="POST" style="text-align: center;">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background: #e74c3c; font-size: 20px; padding: 15px 40px;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">退勤する</button>
+    </form>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}

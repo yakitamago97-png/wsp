@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}システムエラー - WORK STATUS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* エラー画面専用の上書きスタイル（画面中央にコンパクトに配置） */
+    body {
+        align-items: center;
+        min-height: 85vh;
+    }
+    .container {
+        max-width: 500px;
+        padding: 35px 30px;
+        text-align: center;
+    }
+    h1 {
+        font-size: 20px;
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <h1>システムエラーが発生しました</h1>
+    <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+        予期せぬエラーが発生しました。<br>
+        お手数ですが、時間を置いて再度お試しいただくか、<br>
+        トップページへお戻りください。
+    </p>
+
+    <!-- エラーコード表示エリア -->
+    <div style="font-size: 13px; color: #888; background: #f8f9fa; padding: 8px 12px; border-radius: 4px; display: inline-block; margin-bottom: 25px; letter-spacing: 0.5px;">
+        エラーコード: <strong>500 Internal Server Error</strong>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 10px;">
+        <a href="javascript:history.back()" class="btn" style="background: #95a5a6; font-size: 14px;" onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">前の画面へ</a>
+        <a href="{% url 'wsapp:03-top' %}" class="btn" style="font-size: 14px;">トップへ戻る</a>
+    </div>
+{% endblock %}

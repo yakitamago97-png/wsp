@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}ログアウト - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>ログアウトしました</h1>
+    <p>ご利用ありがとうございました。</p>
+    
+    <div class="nav-links">
+        <a href="{% url 'wsapp:01-login' %}" class="btn">ログイン画面へ戻る</a>
+    </div>
+{% endblock %}

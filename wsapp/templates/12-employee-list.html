@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}従業員一覧 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>従業員一覧</h1>
+
+    <div style="margin-bottom: 15px;">
+        <a href="{% url 'wsapp:10-employee-create' %}" class="btn">+ 新規従業員登録</a>
+    </div>
+
+    <div class="filter-area" style="justify-content: space-between;">
+        <div class="filter-group">
+            <label for="role-select">権限:</label>
+            <select id="role-select">
+                <option value="">すべて</option>
+                <option value="admin">管理者</option>
+                <option value="general">一般</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="name-search">名前検索:</label>
+            <input type="text" id="name-search" placeholder="例: 大原">
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 180px;">氏名</th>
+                <th style="width: 120px;">権限</th>
+                <th style="width: 40px; text-align: center;">従業員情報</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>大原太郎</td>
+                <td>管理者</td>
+                <td style="text-align: center;">
+                    <a href="{% url 'wsapp:11-employee-update' %}" class="btn-sm">編集</a>
+                </td>
+            </tr>
+            <tr>
+                <td>山田太郎</td>
+                <td>一般</td>
+                <td style="text-align: center;">
+                    <a href="{% url 'wsapp:11-employee-update' %}" class="btn-sm">編集</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}コンディション登録 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>コンディション登録</h1>
+    
+    <form action="#" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="sleep_hours">睡眠時間 (時間)</label>
+            <!-- 初期値7、スクロール/矢印で変更できる設定 -->
+            <input type="number" id="sleep_hours" name="sleep_hours" value="7" min="0" max="24" step="0.5" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="health">体調</label>
+            <select id="health" name="health">
+                <option value="good">良い</option>
+                <option value="normal">普通</option>
+                <option value="bad">悪い</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="mood">気分</label>
+            <select id="mood" name="mood">
+                <option value="excellent">スッキリしている</option>
+                <option value="good">前向き・良い</option>
+                <option value="normal">普通</option>
+                <option value="bad">落ち込んでいる</option>
+                <option value="irritated">イライラしている</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn">登録して判定へ</button>
+    </form>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}タスク確認 - WORK STATUS{% endblock %}
+
+{% block content %}
+    <h1>タスク確認</h1>
+
+    <form action="#" method="POST">
+        {% csrf_token %}
+        <table>
+            <thead>
+                <tr>
+                    <th style="font-weight: bold;">タスク名</th>
+                    <th style="width: 110px;">期限</th>
+                    <th>詳細</th>
+                    <th style="width: 140px;">ステータス</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight: bold;">資料作成</td>
+                    <td>2026/10/10</td>
+                    <td style="width: 250px; font-size: 14px; color: #555;">来期の事業計画に向けたパワーポイント資料の作成。</td>
+                    <td>
+                        <select name="status_1" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: #fff; width: 100%; box-sizing: border-box;">
+                            <option value="unprocessed" selected>未処理</option>
+                            <option value="in-progress">処理中</option>
+                            <option value="completed">処理済み</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">顧客対応</td>
+                    <td>2026/10/09</td>
+                    <td style="width: 250px; font-size: 14px; color: #555;">A社からの問い合わせメールへの返信および一次対応。</td>
+                    <td>
+                        <select name="status_2" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: #fff; width: 100%; box-sizing: border-box;">
+                            <option value="unprocessed">未処理</option>
+                            <option value="in-progress" selected>処理中</option>
+                            <option value="completed">処理済み</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <button type="submit" class="btn">ステータスを更新する</button>
+        </div>
+    </form>
+
+    <div class="nav-links">
+        <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
+    </div>
+{% endblock %}
