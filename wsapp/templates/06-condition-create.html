@@ -2,34 +2,127 @@
 
 {% block title %}コンディション登録 - WORK STATUS{% endblock %}
 
+{% block extra_css %}
+<style>
+    .drumroll-wrapper {
+        position: relative;
+        height: 144px; /* 36px * 4行表示、中央行をフォーカスラインにするため180px推奨 */
+        height: 180px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        overflow: hidden;
+        user-select: none;
+    }
+
+    .drumroll-scroll {
+        height: 100%;
+        overflow-y: auto;
+        scroll-snap-type: y mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 72px 0; /* (180px - 36px) / 2 */
+        box-sizing: border-box;
+    }
+
+    .drumroll-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .drumroll-item {
+        height: 36px;
+        line-height: 36px;
+        text-align: center;
+        scroll-snap-align: center;
+        font-size: 15px;
+        color: #888;
+        cursor: pointer;
+        transition: color 0.15s ease, font-weight 0.15s ease, transform 0.15s ease;
+    }
+
+    .drumroll-item.is-selected {
+        color: #2c3e50;
+        font-weight: bold;
+        font-size: 17px;
+        transform: scale(1.04);
+    }
+
+    .drumroll-highlight {
+        position: absolute;
+        top: 72px;
+        left: 8px;
+        right: 8px;
+        height: 36px;
+        border-top: 2px solid #3498db;
+        border-bottom: 2px solid #3498db;
+        background: rgba(52, 152, 219, 0.06);
+        pointer-events: none;
+        border-radius: 3px;
+    }
+
+    .drumroll-fade-top,
+    .drumroll-fade-bottom {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 64px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .drumroll-fade-top {
+        top: 0;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0));
+    }
+
+    .drumroll-fade-bottom {
+        bottom: 0;
+        background: linear-gradient(to top, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0));
+    }
+
+    .drumroll-hint {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <h1>コンディション登録</h1>
     
-    <form action="#" method="POST">
+    <form action="{% url 'wsapp:06-condition-create' %}" method="POST">
         {% csrf_token %}
         <div class="form-group">
-            <label for="sleep_hours">睡眠時間 (時間)</label>
-            <!-- 初期値7、スクロール/矢印で変更できる設定 -->
-            <input type="number" id="sleep_hours" name="sleep_hours" value="7" min="0" max="24" step="0.5" required>
+            <label for="sleep_hours_drum">睡眠時間 (時間)</label>
+            <input type="hidden" id="sleep_hours" name="sleep_hours" value="7.0" required>
+
+            <div class="drumroll-wrapper" aria-label="睡眠時間ドラムロール選択">
+                <div class="drumroll-fade-top"></div>
+                <div class="drumroll-highlight"></div>
+                <div class="drumroll-scroll" id="sleep_hours_drum" tabindex="0" role="listbox" aria-label="睡眠時間（0.5時間刻み）"></div>
+                <div class="drumroll-fade-bottom"></div>
+            </div>
+            <div class="drumroll-hint">上下スクロール・ホイール・クリック・矢印キーで選択できます（現在: <strong id="sleep_hours_display">7.0 時間</strong>）</div>
         </div>
         
         <div class="form-group">
-            <label for="health">体調</label>
-            <select id="health" name="health">
-                <option value="good">良い</option>
-                <option value="normal">普通</option>
-                <option value="bad">悪い</option>
+            <label for="physical_condition">体調</label>
+            <select id="physical_condition" name="physical_condition" required>
+                <option value="" selected disabled>選択してください</option>
+                {% for item in physical_conditions %}
+                    <option value="{{ item.pk }}">{{ item.name }}</option>
+                {% endfor %}
             </select>
         </div>
         
         <div class="form-group">
-            <label for="mood">気分</label>
-            <select id="mood" name="mood">
-                <option value="excellent">スッキリしている</option>
-                <option value="good">前向き・良い</option>
-                <option value="normal">普通</option>
-                <option value="bad">落ち込んでいる</option>
-                <option value="irritated">イライラしている</option>
+            <label for="feeling">気分</label>
+            <select id="feeling" name="feeling" required>
+                <option value="" selected disabled>選択してください</option>
+                {% for item in feelings %}
+                    <option value="{{ item.pk }}">{{ item.name }}</option>
+                {% endfor %}
             </select>
         </div>
         
@@ -39,4 +132,156 @@
     <div class="nav-links">
         <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const drum = document.getElementById('sleep_hours_drum');
+        const hiddenInput = document.getElementById('sleep_hours');
+        const displayLabel = document.getElementById('sleep_hours_display');
+        if (!drum || !hiddenInput) return;
+
+        const ITEM_HEIGHT = 36;
+        const DEFAULT_VALUE = 7.0;
+        const values = [];
+
+        for (let h = 0; h <= 24; h += 0.5) {
+            values.push(h.toFixed(1));
+        }
+
+        values.forEach((val, idx) => {
+            const item = document.createElement('div');
+            item.className = 'drumroll-item';
+            item.dataset.index = idx;
+            item.dataset.value = val;
+            item.setAttribute('role', 'option');
+            item.textContent = `${val} 時間`;
+            item.addEventListener('click', () => {
+                selectIndex(idx, true);
+            });
+            drum.appendChild(item);
+        });
+
+        const items = Array.from(drum.querySelectorAll('.drumroll-item'));
+        let scrollTimer = null;
+        let wheelAccumulator = 0;
+        let lastWheelStepTime = 0;
+        let animFrameId = null;
+        const WHEEL_THRESHOLD = 90;
+        const STEP_COOLDOWN_MS = 140;
+
+        function updateVisualState(activeIdx) {
+            items.forEach((el, idx) => {
+                const selected = idx === activeIdx;
+                el.classList.toggle('is-selected', selected);
+                el.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+            const currentVal = values[activeIdx];
+            hiddenInput.value = currentVal;
+            if (displayLabel) {
+                displayLabel.textContent = `${currentVal} 時間`;
+            }
+        }
+
+        function animateScrollTo(targetTop, duration = 140) {
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
+
+            const startTop = drum.scrollTop;
+            const distance = targetTop - startTop;
+            if (Math.abs(distance) < 0.5) {
+                drum.scrollTop = targetTop;
+                return;
+            }
+
+            const startTime = performance.now();
+
+            function stepFrame(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / duration);
+                // easeOutCubic でなめらかに減速着地
+                const eased = 1 - Math.pow(1 - progress, 3);
+                drum.scrollTop = startTop + distance * eased;
+
+                if (progress < 1) {
+                    animFrameId = requestAnimationFrame(stepFrame);
+                } else {
+                    drum.scrollTop = targetTop;
+                    animFrameId = null;
+                }
+            }
+
+            animFrameId = requestAnimationFrame(stepFrame);
+        }
+
+        function selectIndex(idx, smooth = false) {
+            const clamped = Math.max(0, Math.min(values.length - 1, idx));
+            const targetTop = clamped * ITEM_HEIGHT;
+
+            if (smooth) {
+                animateScrollTo(targetTop, 140);
+            } else {
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
+                drum.scrollTop = targetTop;
+            }
+            updateVisualState(clamped);
+        }
+
+        function getNearestIndex() {
+            return Math.max(0, Math.min(values.length - 1, Math.round(drum.scrollTop / ITEM_HEIGHT)));
+        }
+
+        drum.addEventListener('scroll', () => {
+            const nearest = getNearestIndex();
+            updateVisualState(nearest);
+
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => {
+                if (!animFrameId) {
+                    selectIndex(getNearestIndex(), true);
+                }
+            }, 140);
+        });
+
+        drum.addEventListener('keydown', (e) => {
+            const current = getNearestIndex();
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectIndex(current + 1, true);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectIndex(current - 1, true);
+            }
+        });
+
+        drum.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            const now = Date.now();
+            if (now - lastWheelStepTime > 400 && Math.abs(wheelAccumulator) < WHEEL_THRESHOLD) {
+                wheelAccumulator = 0;
+            }
+
+            wheelAccumulator += e.deltaY;
+
+            if (Math.abs(wheelAccumulator) >= WHEEL_THRESHOLD && now - lastWheelStepTime >= STEP_COOLDOWN_MS) {
+                const step = wheelAccumulator > 0 ? 1 : -1;
+                wheelAccumulator = 0;
+                lastWheelStepTime = now;
+
+                const current = getNearestIndex();
+                selectIndex(current + step, true);
+            }
+        }, { passive: false });
+
+        const defaultIdx = values.indexOf(DEFAULT_VALUE.toFixed(1));
+        selectIndex(defaultIdx >= 0 ? defaultIdx : 14, false);
+    });
+</script>
 {% endblock %}

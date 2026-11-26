@@ -29,39 +29,93 @@
                 <th style="width: 100px; text-align: center;">操作</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td style="width: 220px; font-weight: bold;">資料作成</td>
-                <td>大原太郎</td>
-                <td>未処理</td>
-                <td style="color: green; font-weight: bold;">良好</td>
-                <td>2026/10/10</td>
-                <td style="width: 180px; font-size: 14px; color: #555;">来期の事業計画に向けたパワーポイント資料の作成。</td>
-                <td style="text-align: center;">
-                    <div style="display: flex; gap: 5px; align-items: center; justify-content: center;">
-                        <a href="#" class="btn-sm" style="color: #e74c3c; border-color: #e74c3c;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e74c3c';">完了</a>
-                        <a href="{% url 'wsapp:15-task-update' %}" class="btn-sm">編集</a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 220px; font-weight: bold;">顧客対応</td>
-                <td>山田太郎</td>
-                <td>処理中</td>
-                <td style="color: #856404; font-weight: bold;">要休息</td>
-                <td>2026/10/09</td>
-                <td style="width: 180px; font-size: 14px; color: #555;">A社からの問い合わせメールへの返信および一次対応。</td>
-                <td style="text-align: center;">
-                    <div style="display: flex; gap: 5px; align-items: center; justify-content: center;">
-                        <a href="#" class="btn-sm" style="color: #e74c3c; border-color: #e74c3c;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e74c3c';">完了</a>
-                        <a href="{% url 'wsapp:15-task-update' %}" class="btn-sm">編集</a>
-                    </div>
-                </td>
-            </tr>
+        <tbody id="task-table-body">
+            {% for row in task_rows %}
+                {% with task=row.task cond_label=row.condition_label is_bad=row.is_bad_condition is_high=row.is_high_workload %}
+                <tr
+                    data-bad-condition="{% if is_bad %}1{% else %}0{% endif %}"
+                    data-high-workload="{% if is_high %}1{% else %}0{% endif %}"
+                >
+                    <td style="width: 220px; font-weight: bold;">
+                        {{ task.task_name|default:task }}
+                    </td>
+                    <td>
+                        {% if task.employee.full_name %}
+                            {{ task.employee.full_name }}
+                        {% elif task.employee %}
+                            {{ task.employee.last_name }} {{ task.employee.given_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ row.status_label }}
+                    </td>
+                    <td style="font-weight: bold; {% if is_bad %}color: #856404;{% else %}color: green;{% endif %}">
+                        {{ cond_label }}
+                    </td>
+                    <td>
+                        {% if task.deadline %}
+                            {{ task.deadline|date:"Y/m/d" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="width: 180px; font-size: 14px; color: #555;">
+                        {{ row.detail_text }}
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 5px; align-items: center; justify-content: center;">
+                            <form action="{% url 'wsapp:task-complete' task.pk %}" method="POST" style="display: inline; margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-sm" style="color: #e74c3c; border-color: #e74c3c; background: #fff; cursor: pointer;" onmouseover="this.style.background='#e74c3c'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e74c3c';">完了</button>
+                            </form>
+                            <a href="{% url 'wsapp:15-task-update' task.pk %}" class="btn-sm">編集</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+            {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666;">
+                        登録されているタスクはありません。
+                    </td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 
     <div class="nav-links">
         <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const filterSelect = document.getElementById('filter-select');
+        const tbody = document.getElementById('task-table-body');
+        if (!filterSelect || !tbody) return;
+
+        const rows = Array.from(tbody.querySelectorAll('tr[data-bad-condition]'));
+
+        function applyFilter() {
+            const mode = filterSelect.value;
+            rows.forEach((row) => {
+                const isBad = row.dataset.badCondition === '1';
+                const isHigh = row.dataset.highWorkload === '1';
+
+                let visible = true;
+                if (mode === 'bad-condition') {
+                    visible = isBad;
+                } else if (mode === 'high-workload') {
+                    visible = isHigh;
+                }
+                row.style.display = visible ? '' : 'none';
+            });
+        }
+
+        filterSelect.addEventListener('change', applyFilter);
+    });
+</script>
 {% endblock %}

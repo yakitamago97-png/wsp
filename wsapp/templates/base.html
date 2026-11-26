@@ -139,6 +139,37 @@
             padding-top: 20px; 
             border-top: 1px solid #ecf0f1; 
         }
+
+        @keyframes toastSlideDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-24px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes toastSlideUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-24px);
+            }
+        }
+
+        .toast-notice {
+            animation: toastSlideDown 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .toast-notice.is-closing {
+            animation: toastSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            pointer-events: none;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -159,7 +190,6 @@
                         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
                         font-size: 14px;
                         font-weight: 500;
-                        transition: opacity 0.35s ease, transform 0.35s ease;
                         {% if message.tags == 'error' %}
                             background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;
                         {% elif message.tags == 'warning' %}
@@ -186,8 +216,7 @@
                 function dismissToast(el) {
                     if (!el || el.dataset.closing) return;
                     el.dataset.closing = '1';
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(-8px)';
+                    el.classList.add('is-closing');
                     setTimeout(() => el.remove(), 350);
                 }
 
@@ -195,6 +224,11 @@
                     document.querySelectorAll('.toast-notice').forEach((el, index) => {
                         setTimeout(() => dismissToast(el), 3500 + index * 300);
                     });
+                });
+                window.addEventListener('pageshow', (event) => {
+                    if (event.persisted) {
+                        window.location.reload();
+                    }
                 });
             </script>
         {% endif %}
