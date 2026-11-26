@@ -4,9 +4,19 @@
 
 {% block content %}
     <h1>ログアウトしました</h1>
-    <p>ご利用ありがとうございました。</p>
-    
-    <div class="nav-links">
-        <a href="{% url 'wsapp:01-login' %}" class="btn">ログイン画面へ戻る</a>
+    <p>ご利用ありがとうございました。セッションを終了しました。</p>
+
+    <div class="nav-links" style="margin-top: 20px;">
+        <a href="{% url 'wsapp:01-login' %}" class="btn">ログイン画面へ</a>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+</script>
 {% endblock %}

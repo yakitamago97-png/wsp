@@ -25,6 +25,7 @@ urlpatterns = [
 
     # 09: 勤務履歴
     path('working-history/', views.working_history_view, name='09-working-history'),
+    path('working-history/api/', views.working_history_api, name='09-working-history-api'),
 
     # 10 / 11 / 12: 従業員登録・編集・一覧
     path('employee/create/', views.employee_create_view, name='10-employee-create'),
@@ -38,6 +39,7 @@ urlpatterns = [
     path('task/create/', views.task_create_view, name='14-task-create'),
     path('task/<int:pk>/update/', views.task_update_view, name='15-task-update'),
     path('task/list/', views.task_list_view, name='16-task-list'),
+    path('task/<int:pk>/complete/', views.task_complete_view, name='task-complete'),
 
     # 17 / 18: 打刻一覧・打刻修正
     path('clock-in/list/', views.clock_in_list_view, name='17-clock-in-list'),

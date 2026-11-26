@@ -33,25 +33,64 @@
                 <th style="width: 40px; text-align: center;">従業員情報</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>大原太郎</td>
-                <td>管理者</td>
-                <td style="text-align: center;">
-                    <a href="{% url 'wsapp:11-employee-update' %}" class="btn-sm">編集</a>
-                </td>
-            </tr>
-            <tr>
-                <td>山田太郎</td>
-                <td>一般</td>
-                <td style="text-align: center;">
-                    <a href="{% url 'wsapp:11-employee-update' %}" class="btn-sm">編集</a>
-                </td>
-            </tr>
+        <tbody id="employee-table-body">
+            {% for emp in employees %}
+                {% with is_admin=emp.authority %}
+                <tr
+                    data-role="{% if is_admin %}admin{% else %}general{% endif %}"
+                    data-name="{{ emp.full_name|default:emp.email|default:emp.pk }}"
+                >
+                    <td>{{ emp.full_name|default:emp.email }}</td>
+                    <td>{% if is_admin %}管理者{% else %}一般{% endif %}</td>
+                    <td style="text-align: center;">
+                        <a href="{% url 'wsapp:11-employee-update' emp.pk %}" class="btn-sm">編集</a>
+                    </td>
+                </tr>
+                {% endwith %}
+            {% empty %}
+                <tr id="empty-employee-row">
+                    <td colspan="3" style="text-align: center; color: #666;">登録されている従業員はありません。</td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 
     <div class="nav-links">
         <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const roleSelect = document.getElementById('role-select');
+        const nameSearch = document.getElementById('name-search');
+        const tbody = document.getElementById('employee-table-body');
+        if (!tbody) return;
+
+        const rows = Array.from(tbody.querySelectorAll('tr[data-role]'));
+
+        function filterEmployees() {
+            const selectedRole = roleSelect ? roleSelect.value : '';
+            const keyword = nameSearch ? nameSearch.value.trim().toLowerCase() : '';
+
+            rows.forEach((row) => {
+                const rowRole = row.dataset.role || '';
+                const rowName = (row.dataset.name || '').toLowerCase();
+
+                const matchesRole = !selectedRole || rowRole === selectedRole;
+                const matchesName = !keyword || rowName.includes(keyword);
+
+                row.style.display = (matchesRole && matchesName) ? '' : 'none';
+            });
+        }
+
+        if (roleSelect) {
+            roleSelect.addEventListener('change', filterEmployees);
+        }
+        if (nameSearch) {
+            nameSearch.addEventListener('input', filterEmployees);
+        }
+    });
+</script>
 {% endblock %}

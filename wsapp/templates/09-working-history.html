@@ -2,19 +2,93 @@
 
 {% block title %}勤務履歴 - WORK STATUS{% endblock %}
 
+{% block extra_css %}
+<style>
+    .week-filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+    }
+
+    .week-switcher {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .week-title {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .btn-pager {
+        background: #fff;
+        color: #3498db;
+        border: 1px solid #3498db;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .btn-pager:hover:not(:disabled) {
+        background: #3498db;
+        color: #fff;
+    }
+
+    .btn-pager:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-group label {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 14px;
+    }
+
+    .filter-group input[type="month"] {
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #fff;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <h1>勤務履歴</h1>
 
     <div class="week-filter-bar">
         <div class="week-switcher">
-            <button type="button" class="btn-pager">＜ 前の週</button>
-            <span id="week-display" class="week-title">2026年10月05日(月) ～ 2026年10月11日(日)</span>
-            <button type="button" class="btn-pager">次の週 ＞</button>
+            <button type="button" id="prev-month-btn" class="btn-pager">＜ 前の月</button>
+            <span id="month-display" class="week-title">{{ history_data.month_display }}</span>
+            <button
+                type="button"
+                id="next-month-btn"
+                class="btn-pager"
+                {% if history_data.is_latest_month %}style="display: none;"{% endif %}
+            >次の月 ＞</button>
         </div>
 
         <div class="filter-group">
-            <label for="date-picker">日付を選択:</label>
-            <input type="date" id="date-picker" value="2026-10-09" onchange="handleDateChange(this.value)">
+            <label for="month-picker">月を選択:</label>
+            <input type="month" id="month-picker" value="{{ history_data.selected_month }}">
         </div>
     </div>
 
@@ -32,42 +106,30 @@
             </tr>
         </thead>
         <tbody id="history-tbody">
-            <tr>
-                <td>2026/10/09 (金)</td>
-                <td>09:00</td>
-                <td>18:00</td>
-                <td>7.0時間</td>
-                <td>良い</td>
-                <td>前向き・良い</td>
-                <td style="color: green; font-weight: bold;">良好</td>
-                <td style="text-align: center;">
-                    <a href="#" class="btn-sm">編集</a>
-                </td>
-            </tr>
-            <tr>
-                <td>2026/10/08 (木)</td>
-                <td>09:00</td>
-                <td>18:00</td>
-                <td>7.5時間</td>
-                <td>良い</td>
-                <td>前向き・良い</td>
-                <td style="color: green; font-weight: bold;">良好</td>
-                <td style="text-align: center;">
-                    <a href="#" class="btn-sm">編集</a>
-                </td>
-            </tr>
-            <tr>
-                <td>2026/10/07 (水)</td>
-                <td>08:55</td>
-                <td>18:15</td>
-                <td>6.0時間</td>
-                <td>普通</td>
-                <td>普通</td>
-                <td style="color: #856404; font-weight: bold;">普通</td>
-                <td style="text-align: center;">
-                    <a href="#" class="btn-sm">編集</a>
-                </td>
-            </tr>
+            {% for row in history_data.rows %}
+                <tr>
+                    <td>{{ row.date_label }}</td>
+                    <td>{{ row.clock_in }}</td>
+                    <td>{{ row.clock_out }}</td>
+                    <td>{{ row.sleep_hours }}</td>
+                    <td>{{ row.physical_condition }}</td>
+                    <td>{{ row.feeling }}</td>
+                    <td style="font-weight: bold; {% if row.ai_judgment == '良好' %}color: green;{% elif row.ai_judgment == '普通' %}color: #856404;{% else %}color: #c0392b;{% endif %}">
+                        {{ row.ai_judgment }}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if row.condition_id %}
+                            <a href="{% url 'wsapp:08-condition-update' row.condition_id %}" class="btn-sm">編集</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #666;">この月の勤務履歴はありません。</td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 
@@ -77,9 +139,127 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        function handleDateChange(dateValue) {
-            document.getElementById('week-display').textContent = dateValue + " を含む週の履歴を表示中";
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const apiUrl = "{% url 'wsapp:09-working-history-api' %}";
+        const editUrlTemplate = "{% url 'wsapp:08-condition-update' 0 %}";
+
+        const prevBtn = document.getElementById('prev-month-btn');
+        const nextBtn = document.getElementById('next-month-btn');
+        const monthPicker = document.getElementById('month-picker');
+        const monthDisplay = document.getElementById('month-display');
+        const tbody = document.getElementById('history-tbody');
+
+        let currentState = {
+            selectedMonth: "{{ history_data.selected_month }}",
+            prevMonth: "{{ history_data.prev_month }}",
+            nextMonth: "{{ history_data.next_month }}",
+            isLatestMonth: {{ history_data.is_latest_month|yesno:"true,false" }}
+        };
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
-    </script>
+
+        function getJudgmentColor(judgment) {
+            if (judgment === '良好') return 'color: green;';
+            if (judgment === '普通') return 'color: #856404;';
+            return 'color: #c0392b;';
+        }
+
+        function buildEditHref(conditionId) {
+            return editUrlTemplate.replace(/\/0\/?$/, `/${conditionId}/`);
+        }
+
+        function updateNextButtonVisibility(isLatestMonth) {
+            nextBtn.style.display = isLatestMonth ? 'none' : '';
+        }
+
+        function renderRows(rows) {
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #666;">この月の勤務履歴はありません。</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = rows.map((row) => {
+                const editCell = row.condition_id
+                    ? `<a href="${escapeHtml(buildEditHref(row.condition_id))}" class="btn-sm">編集</a>`
+                    : `-`;
+
+                return `
+                    <tr>
+                        <td>${escapeHtml(row.date_label)}</td>
+                        <td>${escapeHtml(row.clock_in)}</td>
+                        <td>${escapeHtml(row.clock_out)}</td>
+                        <td>${escapeHtml(row.sleep_hours)}</td>
+                        <td>${escapeHtml(row.physical_condition)}</td>
+                        <td>${escapeHtml(row.feeling)}</td>
+                        <td style="font-weight: bold; ${getJudgmentColor(row.ai_judgment)}">${escapeHtml(row.ai_judgment)}</td>
+                        <td style="text-align: center;">${editCell}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function setLoading(isLoading) {
+            prevBtn.disabled = isLoading;
+            nextBtn.disabled = isLoading;
+            monthPicker.disabled = isLoading;
+        }
+
+        async function loadMonthHistory(targetMonth) {
+            if (!targetMonth) return;
+            setLoading(true);
+            try {
+                const res = await fetch(`${apiUrl}?month=${encodeURIComponent(targetMonth)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) throw new Error('通信エラー');
+
+                const data = await res.json();
+                monthDisplay.textContent = data.month_display;
+                monthPicker.value = data.selected_month;
+                updateNextButtonVisibility(Boolean(data.is_latest_month));
+
+                currentState = {
+                    selectedMonth: data.selected_month,
+                    prevMonth: data.prev_month,
+                    nextMonth: data.next_month,
+                    isLatestMonth: Boolean(data.is_latest_month)
+                };
+
+                renderRows(data.rows);
+            } catch (err) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #c0392b;">勤務履歴の取得に失敗しました。</td>
+                    </tr>
+                `;
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            loadMonthHistory(currentState.prevMonth);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            loadMonthHistory(currentState.nextMonth);
+        });
+
+        monthPicker.addEventListener('change', (e) => {
+            loadMonthHistory(e.target.value);
+        });
+    });
+</script>
 {% endblock %}

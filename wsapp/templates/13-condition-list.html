@@ -8,7 +8,7 @@
     <div class="filter-area">
         <div>
             <label for="target_date">対象日:</label>
-            <input type="date" id="target_date" value="2026-10-09">
+            <input type="date" id="target_date" name="target_date" value="{{ selected_date }}">
         </div>
     </div>
 
@@ -23,27 +23,66 @@
                 <th style="width: 100px;">AI判定</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>大原 太郎</td>
-                <td>2026/10/09</td>
-                <td>7.5時間</td>
-                <td>普通</td>
-                <td>スッキリしている</td>
-                <td style="color: green; font-weight: bold;">良好</td>
-            </tr>
-            <tr>
-                <td>山田 太郎</td>
-                <td>2026/10/09</td>
-                <td>4.0時間</td>
-                <td>悪い</td>
-                <td>イライラしている</td>
-                <td style="color: #856404; font-weight: bold;">要休息</td>
-            </tr>
+        <tbody id="condition-table-body">
+            {% for cond in conditions %}
+                {% with judgment=cond.ai_judgement|default:"良好" %}
+                <tr>
+                    <td>
+                        {% if cond.employee.full_name %}
+                            {{ cond.employee.full_name }}
+                        {% else %}
+                            {{ cond.employee.last_name }} {{ cond.employee.given_name }}
+                        {% endif %}
+                    </td>
+                    <td>{{ cond.date|date:"Y/m/d" }}</td>
+                    <td>
+                        {% if cond.sleep_time is not None %}
+                            {{ cond.sleep_time|floatformat:1 }}時間
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ cond.physical_condition.name|default:cond.physical_condition|default:"-" }}
+                    </td>
+                    <td>
+                        {{ cond.feeling.name|default:cond.feeling|default:"-" }}
+                    </td>
+                    <td style="font-weight: bold; {% if '要' in judgment or '注意' in judgment or '悪' in judgment %}color: #856404;{% else %}color: green;{% endif %}">
+                        {{ judgment }}
+                    </td>
+                </tr>
+                {% endwith %}
+            {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #666;">
+                        該当するコンディションデータはありません。
+                    </td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 
     <div class="nav-links">
         <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dateInput = document.getElementById('target_date');
+        if (!dateInput) return;
+
+        dateInput.addEventListener('change', () => {
+            const url = new URL(window.location.href);
+            if (dateInput.value) {
+                url.searchParams.set('target_date', dateInput.value);
+            } else {
+                url.searchParams.delete('target_date');
+            }
+            window.location.href = url.toString();
+        });
+    });
+</script>
 {% endblock %}

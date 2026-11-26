@@ -5,31 +5,33 @@
 {% block content %}
     <h1>タスク編集</h1>
     
-    <form action="#" method="POST">
+    <form action="" method="POST">
         {% csrf_token %}
         <div class="form-group">
             <label for="task_name">タスク名</label>
-            <input type="text" id="task_name" name="task_name" value="資料作成" required>
+            <input type="text" id="task_name" name="task_name" value="{{ form_data.task_name|default:task.task_name }}" required>
         </div>
         
         <div class="form-group">
             <label for="assignee">担当者</label>
-            <select id="assignee" name="assignee">
-                <option value="001" selected>大原 太郎</option>
-                <option value="002">山田 太郎</option>
-                <option value="003">鈴木 花子</option>
-                <option value="004">佐藤 次郎</option>
+            <select id="assignee" name="assignee" required>
+                <option value="" disabled {% if not current_assignee_id %}selected{% endif %}>選択してください</option>
+                {% for emp in employees %}
+                    <option value="{{ emp.pk }}" {% if current_assignee_id|stringformat:"s" == emp.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ emp.full_name|default:emp.email|default:emp.pk }}
+                    </option>
+                {% endfor %}
             </select>
         </div>
 
         <div class="form-group">
             <label for="deadline">期限</label>
-            <input type="date" id="deadline" name="deadline" value="2026-10-10" required>
+            <input type="date" id="deadline" name="deadline" value="{{ form_data.deadline }}">
         </div>
 
         <div class="form-group">
             <label for="detail">詳細内容</label>
-            <textarea id="detail" name="detail" placeholder="タスクの具体的な内容や手順を入力してください" style="resize: vertical; height: 100px; font-family: sans-serif;">来期の事業計画に向けたパワーポイント資料の作成。</textarea>
+            <textarea id="detail" name="detail" placeholder="タスクの具体的な内容や手順を入力してください" style="resize: vertical; height: 100px; font-family: sans-serif;">{{ form_data.detail|default:task.detail }}</textarea>
         </div>
 
         <button type="submit" class="btn">更新する</button>
