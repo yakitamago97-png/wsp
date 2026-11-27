@@ -31,15 +31,38 @@
 
     <h2>従業員メニュー</h2>
     <ul>
-        <li><a href="{% url 'wsapp:04-attendance' %}">出勤打刻登録</a></li>
-        <li><a href="{% url 'wsapp:05-leaving-work' %}">退勤打刻登録</a></li>
-        <li><a href="{% url 'wsapp:06-condition-create' %}">コンディション登録</a></li>
+        <li>
+            {% if today_record %}
+                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                    出勤打刻登録（打刻済み：{{ today_record.clock_in|date:"H:i" }}）
+                </span>
+            {% else %}
+                <a href="{% url 'wsapp:04-attendance' %}">出勤打刻登録</a>
+            {% endif %}
+        </li>
+        <li>
+            {% if not today_record %}
+                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                    退勤打刻登録（未出勤）
+                </span>
+            {% elif today_record.clock_out %}
+                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                    退勤打刻登録（打刻済み：{{ today_record.clock_out|date:"H:i" }}）
+                </span>
+            {% else %}
+                <a href="{% url 'wsapp:05-leaving-work' %}">退勤打刻登録</a>
+            {% endif %}
+        </li>
+        <li>
+            {% if today_condition %}
+                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                    コンディション登録（登録済み）
+                </span>
+            {% else %}
+                <a href="{% url 'wsapp:06-condition-create' %}">コンディション登録</a>
+            {% endif %}
+        </li>
         <li><a href="{% url 'wsapp:09-working-history' %}">勤務履歴</a></li>
-        {% if task.pk %}
-            <a href="{% url 'wsapp:19-task-check' task.pk %}">{{ task.task_name }}</a>
-        {% else %}
-            {{ task.task_name }}
-        {% endif %}
         <li><a href="{% url 'wsapp:20-password-update' %}">パスワード変更</a></li>
     </ul>
 

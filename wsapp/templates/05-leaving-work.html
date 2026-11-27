@@ -4,14 +4,48 @@
 
 {% block content %}
     <h1>退勤打刻登録</h1>
-    <p style="font-size: 24px; text-align: center; font-weight: bold; margin: 30px 0;">18:00:00</p>
+    <p id="current-time-display" style="font-size: 24px; text-align: center; font-weight: bold; margin: 30px 0;">{{ current_time|default:"--:--:--" }}</p>
     
-    <form action="#" method="POST" style="text-align: center;">
-        {% csrf_token %}
-        <button type="submit" class="btn" style="background: #e74c3c; font-size: 20px; padding: 15px 40px;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">退勤する</button>
-    </form>
+    {% if not today_record %}
+        <p style="text-align: center; color: #555; margin-bottom: 20px;">
+            本日の出勤打刻がまだ完了していません。
+        </p>
+        <div style="text-align: center;">
+            <button type="button" class="btn" style="background: #e74c3c; font-size: 20px; padding: 15px 40px; opacity: 0.5; cursor: not-allowed;" disabled>退勤する</button>
+        </div>
+    {% elif today_record.clock_out %}
+        <p style="text-align: center; color: #555; margin-bottom: 20px;">
+            本日の退勤打刻は完了しています（{{ today_record.clock_out|date:"H:i" }}）。
+        </p>
+        <div style="text-align: center;">
+            <button type="button" class="btn" style="background: #e74c3c; font-size: 20px; padding: 15px 40px; opacity: 0.5; cursor: not-allowed;" disabled>退勤打刻済み</button>
+        </div>
+    {% else %}
+        <form action="" method="POST" style="text-align: center;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background: #e74c3c; font-size: 20px; padding: 15px 40px;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">退勤する</button>
+        </form>
+    {% endif %}
 
     <div class="nav-links">
         <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
     </div>
+
+    <script>
+        (function () {
+            const el = document.getElementById('current-time-display');
+            if (!el) return;
+
+            function updateClock() {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                el.textContent = `${hh}:${mm}:${ss}`;
+            }
+
+            updateClock();
+            setInterval(updateClock, 1000);
+        })();
+    </script>
 {% endblock %}

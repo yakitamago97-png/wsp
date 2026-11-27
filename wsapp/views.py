@@ -126,6 +126,7 @@ def _to_aware_datetime(target_date, time_str):
     return dt
 
 
+
 # ---------------------------------------------------------------
 # 00 / 01 / 02 / 03 / 20: エラー・認証・トップ・パスワード変更
 # ---------------------------------------------------------------
@@ -171,6 +172,13 @@ def index_view(request):
         working_date=today,
     ).first()
 
+    today_condition = (
+        Condition.objects.filter(employee=request.user, date__date=today)
+        .select_related('physical_condition', 'feeling')
+        .order_by('-date', '-id')
+        .first()
+    )
+
     recent_conditions = (
         Condition.objects.filter(employee=request.user)
         .select_related('physical_condition', 'feeling')
@@ -182,6 +190,7 @@ def index_view(request):
     context = {
         'today': today,
         'today_record': today_record,
+        'today_condition': today_condition,
         'recent_conditions': recent_conditions,
         'my_tasks': my_tasks,
     }
@@ -239,8 +248,12 @@ def clock_in(request):
         return redirect('wsapp:03-top')
 
     today = timezone.localdate()
-    now = timezone.now()
 
+    if WorkRecord.objects.filter(employee=request.user, working_date=today).exists():
+        messages.warning(request, '本日の出勤打刻はすでに完了しています。')
+        return redirect('wsapp:03-top')
+
+    now = timezone.now()
     latest_condition = (
         Condition.objects.filter(employee=request.user, date__date=today)
         .order_by('-date')
@@ -259,7 +272,7 @@ def clock_in(request):
             f'出勤打刻が完了しました（{timezone.localtime(now):%H:%M}）。',
         )
     except IntegrityError:
-        messages.warning(request, '本日の出勤記録はすでに登録されています。')
+        messages.warning(request, '本日の出勤打刻はすでに完了しています。')
 
     return redirect('wsapp:03-top')
 
@@ -270,18 +283,23 @@ def clock_out(request):
         return redirect('wsapp:03-top')
 
     today = timezone.localdate()
-    record = get_object_or_404(WorkRecord, employee=request.user, working_date=today)
+    record = WorkRecord.objects.filter(employee=request.user, working_date=today).first()
+
+    if record is None:
+        messages.warning(request, '本日の出勤打刻がまだ完了していません。先に出勤打刻を行ってください。')
+        return redirect('wsapp:03-top')
 
     if record.clock_out is not None:
         messages.warning(request, '本日の退勤打刻はすでに完了しています。')
-    else:
-        now = timezone.now()
-        record.clock_out = now
-        record.save(update_fields=['clock_out'])
-        messages.success(
-            request,
-            f'退勤打刻が完了しました（{timezone.localtime(now):%H:%M}）。',
-        )
+        return redirect('wsapp:03-top')
+
+    now = timezone.now()
+    record.clock_out = now
+    record.save(update_fields=['clock_out'])
+    messages.success(
+        request,
+        f'退勤打刻が完了しました（{timezone.localtime(now):%H:%M}）。',
+    )
 
     return redirect('wsapp:03-top')
 
@@ -296,7 +314,15 @@ def attendance_view(request):
         employee=request.user,
         working_date=today,
     ).first()
-    return render(request, '04-attendance.html', {'today_record': today_record})
+    current_time = timezone.localtime(timezone.now()).strftime('%H:%M:%S')
+    return render(
+        request,
+        '04-attendance.html',
+        {
+            'today_record': today_record,
+            'current_time': current_time,
+        },
+    )
 
 
 @login_required
@@ -309,7 +335,15 @@ def leaving_work_view(request):
         employee=request.user,
         working_date=today,
     ).first()
-    return render(request, '05-leaving-work.html', {'today_record': today_record})
+    current_time = timezone.localtime(timezone.now()).strftime('%H:%M:%S')
+    return render(
+        request,
+        '05-leaving-work.html',
+        {
+            'today_record': today_record,
+            'current_time': current_time,
+        },
+    )
 
 
 @login_required
@@ -463,12 +497,27 @@ def clock_in_update_view(request, pk):
 # 06 / 07 / 08 / 13: コンディション登録・AI判定・編集・一覧
 # ---------------------------------------------------------------
 @login_required
-def condition_create(request):
+def condition_create_view(request):
+    today = timezone.localdate()
+    today_condition = (
+        Condition.objects.filter(employee=request.user, date__date=today)
+        .select_related('physical_condition', 'feeling')
+        .order_by('-date', '-id')
+        .first()
+    )
+
     physical_conditions = PhysicalCondition.objects.order_by('id')
     feelings = Feeling.objects.order_by('id')
 
     if request.method == 'POST':
-        sleep_raw = request.POST.get('sleep_time', '').strip()
+        if today_condition is not None:
+            messages.warning(request, '本日のコンディションはすでに登録されています。')
+            return redirect('wsapp:03-top')
+
+        sleep_raw = (
+            request.POST.get('sleep_hours', '').strip()
+            or request.POST.get('sleep_time', '').strip()
+        )
         physical_id = request.POST.get('physical_condition', '').strip()
         feeling_id = request.POST.get('feeling', '').strip()
 
@@ -485,6 +534,7 @@ def condition_create(request):
                     request,
                     '06-condition-create.html',
                     {
+                        'today_condition': today_condition,
                         'physical_conditions': physical_conditions,
                         'feelings': feelings,
                     },
@@ -500,7 +550,7 @@ def condition_create(request):
         # 本日の勤務記録があれば最新のコンディションを紐付け
         today_record = WorkRecord.objects.filter(
             employee=request.user,
-            working_date=timezone.localdate(),
+            working_date=today,
         ).first()
         if today_record is not None:
             today_record.condition = condition
@@ -510,6 +560,7 @@ def condition_create(request):
         return redirect('wsapp:03-top')
 
     context = {
+        'today_condition': today_condition,
         'physical_conditions': physical_conditions,
         'feelings': feelings,
     }

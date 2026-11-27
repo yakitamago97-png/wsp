@@ -19,7 +19,7 @@ urlpatterns = [
     path('leaving-work/', views.leaving_work_view, name='05-leaving-work'),
 
     # 06 / 07 / 08: コンディション登録・AI判定・編集
-    path('condition/create/', views.condition_create, name='06-condition-create'),
+    path('condition/create/', views.condition_create_view, name='06-condition-create'),
     path('condition/<int:pk>/judgement/', views.condition_judgement_view, name='07-condition-judgement'),
     path('condition/<int:pk>/update/', views.condition_update_view, name='08-condition-update'),
 
