@@ -90,44 +90,53 @@
 
 {% block content %}
     <h1>コンディション登録</h1>
-    
-    <form action="{% url 'wsapp:06-condition-create' %}" method="POST">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="sleep_hours_drum">睡眠時間 (時間)</label>
-            <input type="hidden" id="sleep_hours" name="sleep_hours" value="7.0" required>
 
-            <div class="drumroll-wrapper" aria-label="睡眠時間ドラムロール選択">
-                <div class="drumroll-fade-top"></div>
-                <div class="drumroll-highlight"></div>
-                <div class="drumroll-scroll" id="sleep_hours_drum" tabindex="0" role="listbox" aria-label="睡眠時間（0.5時間刻み）"></div>
-                <div class="drumroll-fade-bottom"></div>
+    {% if today_condition %}
+        <p style="text-align: center; color: #555; margin: 24px 0;">
+            本日のコンディションはすでに登録されています。
+        </p>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button type="button" class="btn" style="opacity: 0.5; cursor: not-allowed;" disabled>登録済み</button>
+        </div>
+    {% else %}
+        <form action="{% url 'wsapp:06-condition-create' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="sleep_hours_drum">睡眠時間 (時間)</label>
+                <input type="hidden" id="sleep_hours" name="sleep_hours" value="7.0" required>
+
+                <div class="drumroll-wrapper" aria-label="睡眠時間ドラムロール選択">
+                    <div class="drumroll-fade-top"></div>
+                    <div class="drumroll-highlight"></div>
+                    <div class="drumroll-scroll" id="sleep_hours_drum" tabindex="0" role="listbox" aria-label="睡眠時間（0.5時間刻み）"></div>
+                    <div class="drumroll-fade-bottom"></div>
+                </div>
+                <div class="drumroll-hint">上下スクロール・ホイール・クリック・矢印キーで選択できます（現在: <strong id="sleep_hours_display">7.0 時間</strong>）</div>
             </div>
-            <div class="drumroll-hint">上下スクロール・ホイール・クリック・矢印キーで選択できます（現在: <strong id="sleep_hours_display">7.0 時間</strong>）</div>
-        </div>
-        
-        <div class="form-group">
-            <label for="physical_condition">体調</label>
-            <select id="physical_condition" name="physical_condition" required>
-                <option value="" selected disabled>選択してください</option>
-                {% for item in physical_conditions %}
-                    <option value="{{ item.pk }}">{{ item.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="feeling">気分</label>
-            <select id="feeling" name="feeling" required>
-                <option value="" selected disabled>選択してください</option>
-                {% for item in feelings %}
-                    <option value="{{ item.pk }}">{{ item.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <button type="submit" class="btn">登録して判定へ</button>
-    </form>
+            
+            <div class="form-group">
+                <label for="physical_condition">体調</label>
+                <select id="physical_condition" name="physical_condition" required>
+                    <option value="" selected disabled>選択してください</option>
+                    {% for item in physical_conditions %}
+                        <option value="{{ item.pk }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="feeling">気分</label>
+                <select id="feeling" name="feeling" required>
+                    <option value="" selected disabled>選択してください</option>
+                    {% for item in feelings %}
+                        <option value="{{ item.pk }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn">登録して判定へ</button>
+        </form>
+    {% endif %}
 
     <div class="nav-links">
         <a href="{% url 'wsapp:03-top' %}">トップへ戻る</a>
