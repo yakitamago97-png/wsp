@@ -2,38 +2,231 @@
 
 {% block title %}トップ - WORK STATUS{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* 本日の状況カード */
+    .status-card {
+        background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+        border: 1px solid #dbeafe;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 28px;
+    }
+
+    .status-card h2 {
+        margin-top: 0;
+        margin-bottom: 14px;
+        border-left-color: #2563eb;
+    }
+
+    .status-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 14px 0;
+        font-size: 14px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 3px 12px;
+        border-radius: 999px;
+    }
+
+    .status-badge::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #16a34a;
+    }
+
+    /* タスクリスト（カスタムドット付き） */
+    .task-list {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-list li {
+        position: relative;
+        padding: 9px 14px 9px 30px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .task-list li::before {
+        content: "";
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #3b82f6;
+        box-shadow: 0 0 0 3px #dbeafe;
+    }
+
+    .task-list li.is-empty {
+        color: #64748b;
+        background: rgba(255, 255, 255, 0.7);
+    }
+
+    .task-list li.is-empty::before {
+        background: #94a3b8;
+        box-shadow: none;
+    }
+
+    .task-deadline {
+        font-size: 12px;
+        color: #475569;
+        background: #f1f5f9;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-weight: 500;
+    }
+
+    /* メニューリスト（カスタムアクセント点＋カードリンク） */
+    .menu-list {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 24px 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 10px;
+    }
+
+    .menu-list li {
+        margin: 0;
+    }
+
+    .menu-list li a,
+    .menu-list li .menu-disabled {
+        position: relative;
+        display: flex;
+        align-items: center;
+        padding: 12px 16px 12px 34px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        transition: all 0.15s ease;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .menu-list li a {
+        color: #1e293b;
+    }
+
+    .menu-list li a::before {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2563eb;
+        box-shadow: 0 0 0 3px #eff6ff;
+        transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    .menu-list li a:hover {
+        border-color: #93c5fd;
+        background: #f8fafc;
+        color: #1d4ed8;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08);
+    }
+
+    .menu-list li a:hover::before {
+        transform: translateY(-50%) scale(1.15);
+    }
+
+    .menu-list li .menu-disabled {
+        color: #94a3b8;
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        font-weight: 500;
+    }
+
+    .menu-list li .menu-disabled::before {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #cbd5e1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <h1>トップ</h1>
     
-    <div style="background:#e8f4f8; padding:15px; border-radius:4px; margin-bottom:20px;">
+    <div class="status-card">
         <h2>本日の状況</h2>
-        <p><strong>コンディション:</strong> 良好</p>
-        <p><strong>タスク:</strong></p>
-        <ul>
+        <p class="status-row">
+            <strong>コンディション:</strong>
+            <span class="status-badge">良好</span>
+        </p>
+        <p style="margin: 0 0 6px 0; font-size: 14px;"><strong>タスク:</strong></p>
+        <ul class="task-list">
             {% for task in my_tasks %}
                 <li>
-                    {% if task.pk %}
-                        <a href="{% url 'wsapp:19-task-check' task.pk %}">{{ task.task_name }}</a>
-                    {% else %}
-                        {{ task.task_name }}
-                    {% endif %}
-                    {% if task.deadline %}
-                        (期限: {{ task.deadline|date:"Y-m-d H:i" }})
-                    {% else %}
-                        (期限: 本日)
-                    {% endif %}
+                    <span>
+                        {% if task.pk %}
+                            <a href="{% url 'wsapp:19-task-check' task.pk %}">{{ task.task_name }}</a>
+                        {% else %}
+                            {{ task.task_name }}
+                        {% endif %}
+                    </span>
+                    <span class="task-deadline">
+                        {% if task.deadline %}
+                            期限: {{ task.deadline|date:"Y-m-d H:i" }}
+                        {% else %}
+                            期限: 本日
+                        {% endif %}
+                    </span>
                 </li>
             {% empty %}
-                <li>現在登録されているタスクはありません。</li>
+                <li class="is-empty">現在登録されているタスクはありません。</li>
             {% endfor %}
         </ul>
     </div>
 
     <h2>従業員メニュー</h2>
-    <ul>
+    <ul class="menu-list">
         <li>
             {% if today_record %}
-                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                <span class="menu-disabled" aria-disabled="true">
                     出勤打刻登録（打刻済み：{{ today_record.clock_in|date:"H:i" }}）
                 </span>
             {% else %}
@@ -42,11 +235,11 @@
         </li>
         <li>
             {% if not today_record %}
-                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                <span class="menu-disabled" aria-disabled="true">
                     退勤打刻登録（未出勤）
                 </span>
             {% elif today_record.clock_out %}
-                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                <span class="menu-disabled" aria-disabled="true">
                     退勤打刻登録（打刻済み：{{ today_record.clock_out|date:"H:i" }}）
                 </span>
             {% else %}
@@ -55,7 +248,7 @@
         </li>
         <li>
             {% if today_condition %}
-                <span style="color: #888; cursor: not-allowed;" aria-disabled="true">
+                <span class="menu-disabled" aria-disabled="true">
                     コンディション登録（登録済み）
                 </span>
             {% else %}
@@ -68,7 +261,7 @@
 
     {% if request.user.authority %}
         <h2>管理者メニュー</h2>
-        <ul>
+        <ul class="menu-list">
             <li><a href="{% url 'wsapp:10-employee-create' %}">従業員登録</a></li>
             <li><a href="{% url 'wsapp:12-employee-list' %}">従業員一覧</a></li>
             <li><a href="{% url 'wsapp:13-condition-list' %}">コンディション一覧</a></li>

@@ -274,7 +274,7 @@ def clock_in(request):
     except IntegrityError:
         messages.warning(request, '本日の出勤打刻はすでに完了しています。')
 
-    return redirect('wsapp:03-top')
+    return redirect('wsapp:06-condition-create')
 
 
 @login_required
